@@ -1,0 +1,30 @@
+# Laravel
+api/vendor/
+api/node_modules/
+api/.env
+api/.env.backup
+api/.env.production
+api/storage/*.key
+api/storage/logs/*.log
+api/storage/framework/cache/data/*
+api/storage/framework/sessions/*
+api/storage/framework/views/*
+api/bootstrap/cache/*
+api/public/hot
+api/public/storage
+
+# Frontend uploads
+frontend/uploads/*
+!frontend/uploads/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
