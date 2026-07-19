@@ -11,6 +11,53 @@ use App\Http\Controllers\SettingsController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Health check endpoint
+Route::get('/health', function() {
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'API is running',
+        'timestamp' => now(),
+        'database' => \DB::connection()->getDatabaseName()
+    ]);
+});
+
+// Create admin user (one-time setup)
+Route::get('/create-admin', function() {
+    $secret = request('secret');
+    if ($secret !== 'attendx2026') {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+    
+    // Check if admin already exists
+    $existingAdmin = \App\Models\User::where('email', 'admin@attendancex.com')->first();
+    if ($existingAdmin) {
+        return response()->json([
+            'message' => 'Admin already exists',
+            'email' => 'admin@attendancex.com',
+            'hint' => 'Use this email to login'
+        ]);
+    }
+    
+    // Create admin
+    $admin = \App\Models\User::create([
+        'name' => 'Administrator',
+        'email' => 'admin@attendancex.com',
+        'password' => bcrypt('admin123'),
+        'role' => 'admin',
+        'status' => 'active',
+        'phone' => '08123456789',
+        'department' => 'IT',
+        'position' => 'System Administrator'
+    ]);
+    
+    return response()->json([
+        'message' => 'Admin user created successfully',
+        'email' => 'admin@attendancex.com',
+        'password' => 'admin123',
+        'hint' => 'Please change password after first login'
+    ]);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
