@@ -1,5 +1,5 @@
-# Use official PHP 8.2 image with Apache
-FROM php:8.2-apache
+# Use official PHP 8.2 CLI image (no Apache)
+FROM php:8.2-cli
 
 # Set working directory
 WORKDIR /var/www/html
@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libpq-dev \
+    postgresql-client \
     zip \
     unzip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -26,28 +27,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
+RUN chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Apache configuration
-RUN a2enmod rewrite
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+# Expose port (Railway will inject $PORT)
+EXPOSE 8080
+ENV PORT=8080
 
-# Expose port
-EXPOSE 80
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
-  CMD curl -f http://localhost/ || exit 1
-
-# Start script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["apache2-foreground"]
+# Start Laravel with built-in PHP server
+CMD php artisan serve --host=0.0.0.0 --port=${PORT}
